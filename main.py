@@ -43,11 +43,24 @@ class MainWid(ScreenManager):
 		self.APP_PATH = os.getcwd()
 		self.BD_PATH = self.APP_PATH + '/db_sqlite3.db'
 		self.startWid = StartWid(self)
+		self.dataBaseWid = DataBaseWid(self)
 		
 		wid = Screen(name='start')
 		wid.add_widget(self.startWid)
 		self.add_widget(wid)
+		
+		wid = Screen(name='database')
+		wid.add_widget(self.dataBaseWid)
+		self.add_widget(wid)
 
+		self.start()
+
+	def start(self):
+		self.current = 'start'
+
+	def dataBase(self):
+		self.current = 'database'
+		
 
 class StartWid(BoxLayout):
 	
@@ -57,6 +70,14 @@ class StartWid(BoxLayout):
 
 	def create_db(self):
 		connect_db(self.mainwid.BD_PATH)
+		self.mainwid.dataBase()
+
+
+class DataBaseWid(BoxLayout):
+
+	def __init__(self, mainwid, **kwargs):
+		super(DataBaseWid, self).__init__(**kwargs)
+		self.mainwid = mainwid
 
 
 class MainApp(App):
