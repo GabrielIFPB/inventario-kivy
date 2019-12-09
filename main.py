@@ -7,7 +7,7 @@ from kivy.app import App
 from kivy.config import Config
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
-from kivy.uix.textinput import TextInput
+from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen, ScreenManager
 
 Config.set('graphics', 'width', '340')
@@ -36,6 +36,10 @@ def create_table_product(cursor):
 			valor FLOAT NOT NULL
 		)"""
 	)
+
+
+class MessagePopup(Popup):
+	pass
 	
 
 class MainWid(ScreenManager):
@@ -43,10 +47,11 @@ class MainWid(ScreenManager):
 	def __init__(self, *args, **kwargs):
 		super().__init__(**kwargs)
 		self.APP_PATH = os.getcwd()
-		self.BD_PATH = self.APP_PATH + '/db_sqlite3.db'
+		self.DB_PATH = self.APP_PATH + '/db_sqlite3.db'
 		self.startWid = StartWid(self)
 		self.dataBaseWid = DataBaseWid(self)
 		self.insertDataWid = BoxLayout()
+		self.popup = MessagePopup()
 		
 		wid = Screen(name='start')
 		wid.add_widget(self.startWid)
@@ -83,7 +88,7 @@ class StartWid(BoxLayout):
 		self.mainwid = mainwid
 
 	def create_db(self):
-		connect_db(self.mainwid.BD_PATH)
+		connect_db(self.mainwid.DB_PATH)
 		self.mainwid.dataBase()
 
 
@@ -95,6 +100,30 @@ class DataBaseWid(BoxLayout):
 
 	def check_mem(self):
 		self.ids.container.clear_widgets()
+
+		sql = """
+				SELECT
+					id, nome, marca, valor
+				FROM
+					product;
+			"""
+		try:
+			con = sqlite3.connect(self.mainwid.DB_PATH)
+			cursor = con.cursor()
+			cursor.execute(sql)
+			for i in cursor:
+				win = DataWid(self.mainwid)
+				row = 'ID: ' + str(100000000+i[0])[1:9] + '\n'
+				row2 = i[1] + ', ' + i[2] + '\n'
+				row3 = 'Preço por unidade: ' + str(i[3])
+				win.data_id = str(i[0])
+				win.data = row + row2 + row3
+				self.ids.container.add_widget(win)
+		except Exception as e:
+			print(e)
+		finally:
+			con.close()
+		
 		wid = NewButton(self.mainwid)
 		self.ids.container.add_widget(wid)
 
@@ -106,30 +135,50 @@ class InsertDataWid(BoxLayout):
 		self.mainwid = mainwid
 
 	def save(self):
-		con = sqlite3.connect(self.mainwid.BD_PATH)
+		con = sqlite3.connect(self.mainwid.DB_PATH)
 		cursor = con.cursor()
 		id = self.ids.input_id.text
 		nome = self.ids.input_nome.text
 		marca = self.ids.input_marca.text
 		valor = self.ids.input_valor.text
+		data = (id, nome, marca, valor)
 		sql = """
 			INSERT INTO product(
 					id, nome, marca, valor
 				) VALUES (
 					%s, '%s', '%s', %s
 				)
-		""" % (id, nome, marca, valor)
-		try:
-			cursor.execute(sql)
-			con.commit()
-		except Exception as e:
-			print(e)
-		finally:
-			con.close()
+		""" % data
+		if '' in data:
+			message = self.mainwid.popup.ids.msg
+			self.mainwid.popup.open()
+			self.mainwid.popup.title = 'Database error'
+			message.text = 'Um ou mais campos vazios'
+		else:
+			try:
+				cursor.execute(sql)
+				con.commit()
+				self.mainwid.dataBase()
+			except Exception as e:
+				message = self.mainwid.popup.ids.msg
+				self.mainwid.popup.open()
+				self.mainwid.popup.title = 'Database error'
+				message.text = str(e)
+			finally:
+				con.close()
 	
 	def back(self):
-		print('236476587')
 		self.mainwid.dataBase()
+
+
+class DataWid(BoxLayout):
+	
+	def __init__(self, mainwid, **kwargs):
+		super().__init__(**kwargs)
+		self.mainwid = mainwid
+
+	def update(self, data_id):
+		pass
 
 
 class NewButton(Button):
