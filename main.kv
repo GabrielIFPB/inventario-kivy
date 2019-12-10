@@ -8,7 +8,7 @@
 			size: self.size
 
 
-<StartWid>
+<StartWid>:
 	orientation: 'vertical'
 
 	canvas:
@@ -28,6 +28,26 @@
 
 	BoxLayout:
 		size_hint_y: 0.2
+
+
+<DataWid>:
+	data: ''
+	data_id: ''
+	canvas:
+		Color:
+			rgb: 0.2, 0.2, 0.2
+		Rectangle:
+			size: self.size
+			pos: self.pos
+
+	Label:
+		size_hint_x: 0.9
+		text: root.data
+
+	Button:
+		text: 'Edit'
+		size_hint_x: 0.1
+		on_press: root.update(root.data_id)
 
 
 <NewButton>:
@@ -56,9 +76,26 @@
 			row_default_height: root.height * 0.2
 			height: self.minimum_height
 
-<LeftLabel@Label>
+<LeftLabel@Label>:
 	text_size: self.size
 	halign: 'left'
+
+
+<MessagePopup>:
+
+	BoxLayout:
+		orientation: 'vertical'
+
+		Label:
+			id: msg
+			size_hint: 1, 0.8
+			text: ''
+
+		Button:
+			size_hint: 1, 0.2
+			text: 'Regressar'
+			on_press: root.dismiss()
+
 
 <InsertDataWid>:
 	orientation: 'vertical'
