@@ -154,4 +154,60 @@
 			on_press: root.save()
 
 
+<UpdateDataWid>:
+	data_id: ''
+	orientation: 'vertical'
+
+	canvas:
+		Color:
+			rgb: 0.3, 0.3, 0.9
+		Rectangle:
+			pos: self.pos
+			size: self.size
+
+	LeftLabel:
+		text: 'ID: ' + root.data_id
+
+	LeftLabel:
+		text: 'nome'
+
+	TextInput:
+		id: input_nome
+		multiline: False
+		hint_text: 'nome'
+
+	LeftLabel:
+		text: 'marca'
+
+	TextInput:
+		id: input_marca
+		multiline: False
+		hint_text: 'marca'
+
+	LeftLabel:
+		text: 'valor'
+
+	TextInput:
+		id: input_valor
+		multiline: False
+		hint_text: 'valor'
+
+	BoxLayout:
+		size_hint_y: 4
+
+	BoxLayout:
+
+		Button:
+			text: 'deletar'
+			on_press: root.deletar()
+
+		Button:
+			text: 'update'
+			on_press: root.update()
+
+	BoxLayout:
+
+		Button:
+			text: 'Sair'
+			on_press: root.close()
 

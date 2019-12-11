@@ -50,7 +50,8 @@ class MainWid(ScreenManager):
 		self.DB_PATH = self.APP_PATH + '/db_sqlite3.db'
 		self.startWid = StartWid(self)
 		self.dataBaseWid = DataBaseWid(self)
-		self.insertDataWid = BoxLayout()
+		self.insertDataWid = InsertDataWid(self)    # BoxLayout()
+		self.updateDataWid = BoxLayout()
 		self.popup = MessagePopup()
 		
 		wid = Screen(name='start')
@@ -63,6 +64,10 @@ class MainWid(ScreenManager):
 		
 		wid = Screen(name='insertdata')
 		wid.add_widget(self.insertDataWid)
+		self.add_widget(wid)
+		
+		wid = Screen(name='updatedata')
+		wid.add_widget(self.updateDataWid)
 		self.add_widget(wid)
 
 		self.start()
@@ -79,6 +84,12 @@ class MainWid(ScreenManager):
 		wid = InsertDataWid(self)
 		self.insertDataWid.add_widget(wid)
 		self.current = 'insertdata'
+	
+	def update_data(self, data_id):
+		self.updateDataWid.clear_widgets()
+		wid = UpdateDataWid(self, data_id)
+		self.updateDataWid.add_widget(wid)
+		self.current = 'updatedata'
 
 
 class StartWid(BoxLayout):
@@ -126,6 +137,72 @@ class DataBaseWid(BoxLayout):
 		
 		wid = NewButton(self.mainwid)
 		self.ids.container.add_widget(wid)
+
+
+class UpdateDataWid(BoxLayout):
+
+	def __init__(self, mainwid, data_id, **kwargs):
+		super().__init__(**kwargs)
+		self.mainwid = mainwid
+		self.data_id = data_id
+		self.check_mam()
+
+	def check_mam(self):
+		sql = """
+				SELECT
+					nome, marca, valor
+				FROM
+					product
+				WHERE id = %s;
+			""" % self.data_id
+		try:
+			con = sqlite3.connect(self.mainwid.DB_PATH)
+			cursor = con.cursor()
+			cursor.execute(sql)
+			for i in cursor:
+				self.ids.input_nome.text = i[0]
+				self.ids.input_marca.text = i[1]
+				self.ids.input_valor.text = str(i[2])
+		except Exception as e:
+			print(e)
+		finally:
+			con.close()
+
+	def update(self):
+		con = sqlite3.connect(self.mainwid.DB_PATH)
+		cursor = con.cursor()
+		nome = self.ids.input_nome.text
+		marca = self.ids.input_marca.text
+		valor = self.ids.input_valor.text
+		data = (nome, marca, valor, self.data_id)
+		sql = """
+				UPDATE product
+					SET	nome='%s', marca='%s', valor=%s
+				WHERE id = %s
+			""" % data
+		if '' in data:
+			message = self.mainwid.popup.ids.msg
+			self.mainwid.popup.open()
+			self.mainwid.popup.title = 'Database error'
+			message.text = 'Um ou mais campos vazios'
+		else:
+			try:
+				cursor.execute(sql)
+				con.commit()
+				self.mainwid.dataBase()
+			except Exception as e:
+				message = self.mainwid.popup.ids.msg
+				self.mainwid.popup.open()
+				self.mainwid.popup.title = 'Database error'
+				message.text = str(e)
+			finally:
+				con.close()
+
+	def deletar(self):
+		pass
+
+	def close(self):
+		self.mainwid.dataBase()
 
 
 class InsertDataWid(BoxLayout):
@@ -178,7 +255,7 @@ class DataWid(BoxLayout):
 		self.mainwid = mainwid
 
 	def update(self, data_id):
-		pass
+		self.mainwid.update_data(data_id)
 
 
 class NewButton(Button):
