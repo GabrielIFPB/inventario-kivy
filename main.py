@@ -199,7 +199,22 @@ class UpdateDataWid(BoxLayout):
 				con.close()
 
 	def deletar(self):
-		pass
+		con = sqlite3.connect(self.mainwid.DB_PATH)
+		cursor = con.cursor()
+		sql = """
+			DELETE FROM product WHERE id=%s
+		""" % self.data_id
+		try:
+			cursor.execute(sql)
+			con.commit()
+			self.mainwid.dataBase()
+		except Exception as e:
+			message = self.mainwid.popup.ids.msg
+			self.mainwid.popup.open()
+			self.mainwid.popup.title = 'Database error'
+			message.text = str(e)
+		finally:
+			con.close()
 
 	def close(self):
 		self.mainwid.dataBase()
